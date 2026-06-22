@@ -1,0 +1,768 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>你有多了解 Ning？</title>
+<link href="https://fonts.googleapis.com/css2?family=Noto+Sans+TC:wght@300;400;500;700&display=swap" rel="stylesheet">
+<script src="https://cdn.jsdelivr.net/npm/@emailjs/browser@4/dist/email.min.js"></script>
+<style>
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+
+  body {
+    min-height: 100vh;
+    font-family: 'Noto Sans TC', sans-serif;
+    background: linear-gradient(135deg, #c8d8f8 0%, #b8eae4 40%, #dce8ff 70%, #e8f4f2 100%);
+    background-attachment: fixed;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 24px 16px;
+  }
+
+  /* Floating orbs background */
+  body::before, body::after {
+    content: '';
+    position: fixed;
+    border-radius: 50%;
+    filter: blur(80px);
+    z-index: 0;
+    pointer-events: none;
+  }
+  body::before {
+    width: 400px; height: 400px;
+    background: rgba(150, 180, 255, 0.35);
+    top: -100px; left: -100px;
+  }
+  body::after {
+    width: 350px; height: 350px;
+    background: rgba(100, 210, 200, 0.3);
+    bottom: -80px; right: -80px;
+  }
+
+  .container {
+    width: 100%;
+    max-width: 620px;
+    position: relative;
+    z-index: 1;
+  }
+
+  /* Glass card */
+  .glass-card {
+    background: rgba(255, 255, 255, 0.55);
+    backdrop-filter: blur(24px) saturate(180%);
+    -webkit-backdrop-filter: blur(24px) saturate(180%);
+    border: 1px solid rgba(255, 255, 255, 0.75);
+    border-radius: 28px;
+    box-shadow:
+      0 8px 40px rgba(120, 150, 220, 0.18),
+      0 2px 8px rgba(120, 150, 220, 0.10),
+      inset 0 1px 0 rgba(255,255,255,0.85);
+    padding: 40px 36px;
+  }
+
+  /* Header */
+  .header {
+    text-align: center;
+    margin-bottom: 32px;
+  }
+  .header .emoji { font-size: 48px; margin-bottom: 12px; display: block; }
+  .header h1 {
+    font-size: 1.65rem;
+    font-weight: 700;
+    background: linear-gradient(120deg, #7090e0, #4dbdb5);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+    letter-spacing: -0.02em;
+    margin-bottom: 8px;
+  }
+  .header p {
+    color: #7a8baa;
+    font-size: 0.9rem;
+    font-weight: 300;
+    line-height: 1.6;
+  }
+
+  /* Name input screen */
+  #name-screen { text-align: center; }
+  .name-label {
+    font-size: 1rem;
+    color: #5a6a85;
+    font-weight: 500;
+    margin-bottom: 16px;
+    display: block;
+  }
+  .glass-input {
+    width: 100%;
+    padding: 14px 20px;
+    border-radius: 16px;
+    border: 1.5px solid rgba(180, 200, 255, 0.6);
+    background: rgba(255,255,255,0.7);
+    backdrop-filter: blur(8px);
+    font-size: 1rem;
+    font-family: 'Noto Sans TC', sans-serif;
+    color: #3a4a65;
+    outline: none;
+    transition: border-color 0.25s, box-shadow 0.25s;
+    text-align: center;
+    letter-spacing: 0.04em;
+  }
+  .glass-input:focus {
+    border-color: rgba(100, 150, 240, 0.7);
+    box-shadow: 0 0 0 3px rgba(100, 150, 240, 0.12);
+  }
+  .glass-input::placeholder { color: #aab8cc; }
+
+  .btn-primary {
+    margin-top: 20px;
+    width: 100%;
+    padding: 15px;
+    border-radius: 16px;
+    border: none;
+    background: linear-gradient(135deg, #7090e0 0%, #4dbdb5 100%);
+    color: white;
+    font-size: 1rem;
+    font-family: 'Noto Sans TC', sans-serif;
+    font-weight: 600;
+    cursor: pointer;
+    letter-spacing: 0.06em;
+    transition: opacity 0.2s, transform 0.15s, box-shadow 0.2s;
+    box-shadow: 0 4px 18px rgba(100, 140, 230, 0.35);
+  }
+  .btn-primary:hover {
+    opacity: 0.93;
+    transform: translateY(-1px);
+    box-shadow: 0 6px 24px rgba(100, 140, 230, 0.42);
+  }
+  .btn-primary:active { transform: translateY(0); }
+  .btn-primary:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+    transform: none;
+  }
+
+  /* Progress bar */
+  .progress-wrap {
+    margin-bottom: 24px;
+  }
+  .progress-meta {
+    display: flex;
+    justify-content: space-between;
+    font-size: 0.78rem;
+    color: #8a9bbb;
+    margin-bottom: 8px;
+    font-weight: 400;
+  }
+  .progress-track {
+    height: 6px;
+    background: rgba(180, 200, 255, 0.3);
+    border-radius: 10px;
+    overflow: hidden;
+  }
+  .progress-fill {
+    height: 100%;
+    background: linear-gradient(90deg, #7090e0, #4dbdb5);
+    border-radius: 10px;
+    transition: width 0.45s cubic-bezier(0.4, 0, 0.2, 1);
+    position: relative;
+  }
+  .progress-fill::after {
+    content: '';
+    position: absolute;
+    top: 0; left: 0; right: 0; bottom: 0;
+    background: linear-gradient(90deg, transparent, rgba(255,255,255,0.4), transparent);
+    animation: shimmer 2s infinite;
+  }
+  @keyframes shimmer {
+    0% { transform: translateX(-100%); }
+    100% { transform: translateX(100%); }
+  }
+
+  /* Question */
+  .question-num {
+    font-size: 0.75rem;
+    font-weight: 500;
+    color: #9aadcc;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    margin-bottom: 10px;
+  }
+  .question-text {
+    font-size: 1.05rem;
+    font-weight: 600;
+    color: #2d3f60;
+    line-height: 1.65;
+    margin-bottom: 22px;
+  }
+
+  /* Options */
+  .options { display: flex; flex-direction: column; gap: 10px; }
+  .option-btn {
+    padding: 14px 18px;
+    border-radius: 14px;
+    border: 1.5px solid rgba(180, 205, 255, 0.55);
+    background: rgba(255,255,255,0.6);
+    backdrop-filter: blur(8px);
+    cursor: pointer;
+    font-family: 'Noto Sans TC', sans-serif;
+    font-size: 0.92rem;
+    color: #3a4f75;
+    text-align: left;
+    transition: all 0.22s;
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    position: relative;
+    overflow: hidden;
+  }
+  .option-btn:hover:not(:disabled) {
+    border-color: rgba(110, 150, 235, 0.65);
+    background: rgba(220, 232, 255, 0.55);
+    transform: translateX(3px);
+  }
+  .option-label {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 26px; height: 26px;
+    border-radius: 8px;
+    background: rgba(160, 185, 250, 0.3);
+    font-size: 0.8rem;
+    font-weight: 600;
+    color: #6080c8;
+    flex-shrink: 0;
+    transition: background 0.22s, color 0.22s;
+  }
+  .option-btn.selected {
+    border-color: rgba(100, 140, 230, 0.8);
+    background: rgba(200, 218, 255, 0.7);
+    box-shadow: 0 2px 12px rgba(100, 140, 230, 0.2);
+  }
+  .option-btn.selected .option-label {
+    background: linear-gradient(135deg, #7090e0, #4dbdb5);
+    color: white;
+  }
+  .option-btn.correct {
+    border-color: rgba(80, 200, 160, 0.8);
+    background: rgba(180, 245, 220, 0.6);
+  }
+  .option-btn.correct .option-label {
+    background: linear-gradient(135deg, #45c9a5, #30b8a0);
+    color: white;
+  }
+  .option-btn.wrong {
+    border-color: rgba(240, 130, 130, 0.7);
+    background: rgba(255, 210, 210, 0.5);
+  }
+  .option-btn.wrong .option-label {
+    background: linear-gradient(135deg, #f08080, #e06060);
+    color: white;
+  }
+  .option-btn:disabled { cursor: default; transform: none !important; }
+
+  /* Fill-in input */
+  .fill-input-wrap { margin-top: 4px; }
+  .fill-input {
+    width: 100%;
+    padding: 13px 18px;
+    border-radius: 14px;
+    border: 1.5px solid rgba(180, 205, 255, 0.55);
+    background: rgba(255,255,255,0.6);
+    backdrop-filter: blur(8px);
+    font-size: 0.95rem;
+    font-family: 'Noto Sans TC', sans-serif;
+    color: #3a4f75;
+    outline: none;
+    transition: border-color 0.25s, box-shadow 0.25s;
+  }
+  .fill-input:focus {
+    border-color: rgba(100, 150, 240, 0.7);
+    box-shadow: 0 0 0 3px rgba(100, 150, 240, 0.12);
+  }
+  .fill-input.correct { border-color: rgba(80, 200, 160, 0.8); background: rgba(180, 245, 220, 0.5); }
+  .fill-input.wrong { border-color: rgba(240, 130, 130, 0.7); background: rgba(255, 210, 210, 0.45); }
+
+  /* Answer feedback */
+  .answer-feedback {
+    margin-top: 12px;
+    padding: 10px 14px;
+    border-radius: 10px;
+    font-size: 0.85rem;
+    font-weight: 500;
+    display: none;
+  }
+  .answer-feedback.show { display: block; }
+  .answer-feedback.correct-fb { background: rgba(160, 235, 200, 0.5); color: #2a8060; }
+  .answer-feedback.wrong-fb { background: rgba(255, 200, 200, 0.5); color: #c04040; }
+
+  /* Next button */
+  .btn-next {
+    margin-top: 20px;
+    width: 100%;
+    padding: 14px;
+    border-radius: 14px;
+    border: none;
+    background: linear-gradient(135deg, #7090e0 0%, #4dbdb5 100%);
+    color: white;
+    font-size: 0.95rem;
+    font-family: 'Noto Sans TC', sans-serif;
+    font-weight: 600;
+    cursor: pointer;
+    letter-spacing: 0.05em;
+    transition: all 0.2s;
+    box-shadow: 0 4px 16px rgba(100, 140, 230, 0.3);
+    display: none;
+  }
+  .btn-next.visible { display: block; }
+  .btn-next:hover { opacity: 0.92; transform: translateY(-1px); }
+
+  /* Results */
+  #result-screen { text-align: center; display: none; }
+  .score-circle {
+    width: 130px; height: 130px;
+    border-radius: 50%;
+    background: rgba(255,255,255,0.6);
+    backdrop-filter: blur(12px);
+    border: 2px solid rgba(255,255,255,0.85);
+    box-shadow: 0 6px 30px rgba(100, 140, 230, 0.25), inset 0 1px 0 rgba(255,255,255,0.9);
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    margin: 0 auto 24px;
+  }
+  .score-num {
+    font-size: 2.2rem;
+    font-weight: 700;
+    background: linear-gradient(120deg, #7090e0, #4dbdb5);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+    line-height: 1;
+  }
+  .score-denom { font-size: 0.8rem; color: #9aadcc; margin-top: 2px; }
+  .result-title {
+    font-size: 1.3rem;
+    font-weight: 700;
+    color: #2d3f60;
+    margin-bottom: 8px;
+  }
+  .result-msg {
+    font-size: 0.9rem;
+    color: #7a8baa;
+    font-weight: 300;
+    margin-bottom: 28px;
+    line-height: 1.7;
+  }
+
+  /* Answer review */
+  .review-title {
+    font-size: 0.85rem;
+    font-weight: 600;
+    color: #8a9bbb;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    margin-bottom: 14px;
+    text-align: left;
+  }
+  .review-list { display: flex; flex-direction: column; gap: 10px; text-align: left; }
+  .review-item {
+    padding: 13px 16px;
+    border-radius: 12px;
+    border: 1.5px solid transparent;
+    font-size: 0.88rem;
+    line-height: 1.55;
+  }
+  .review-item.r-correct {
+    background: rgba(180, 245, 220, 0.45);
+    border-color: rgba(80, 200, 160, 0.4);
+  }
+  .review-item.r-wrong {
+    background: rgba(255, 210, 210, 0.4);
+    border-color: rgba(240, 130, 130, 0.4);
+  }
+  .review-q { font-weight: 600; color: #2d3f60; margin-bottom: 4px; }
+  .review-your { color: #7a8baa; font-size: 0.83rem; }
+  .review-ans { color: #3a8060; font-size: 0.83rem; font-weight: 500; }
+  .review-ans.wrong-color { color: #c04040; }
+
+  /* Sending state */
+  .sending-msg {
+    font-size: 0.85rem;
+    color: #9aadcc;
+    margin-top: 16px;
+  }
+
+  /* Fade animation */
+  .fade-in { animation: fadeIn 0.4s ease both; }
+  @keyframes fadeIn {
+    from { opacity: 0; transform: translateY(10px); }
+    to { opacity: 1; transform: translateY(0); }
+  }
+
+  @media (max-width: 480px) {
+    .glass-card { padding: 28px 20px; border-radius: 22px; }
+    .header h1 { font-size: 1.35rem; }
+  }
+</style>
+</head>
+<body>
+<div class="container">
+  <div class="glass-card">
+
+    <!-- Name Screen -->
+    <div id="name-screen">
+      <div class="header">
+        <span class="emoji">🌊</span>
+        <h1>你有多了解 Ning？</h1>
+        <p>10 道題目，測試你對她的了解程度<br>答完立刻揭曉分數與正確答案</p>
+      </div>
+      <label class="name-label">先告訴我，你是誰？</label>
+      <input class="glass-input" id="player-name" type="text" placeholder="輸入你的名字" maxlength="20" autocomplete="off">
+      <button class="btn-primary" id="start-btn" onclick="startQuiz()">開始測驗 ✨</button>
+    </div>
+
+    <!-- Quiz Screen -->
+    <div id="quiz-screen" style="display:none;">
+      <div class="progress-wrap">
+        <div class="progress-meta">
+          <span id="prog-text">第 1 題，共 10 題</span>
+          <span id="prog-pct">0%</span>
+        </div>
+        <div class="progress-track">
+          <div class="progress-fill" id="progress-fill" style="width:0%"></div>
+        </div>
+      </div>
+      <div id="question-area"></div>
+      <div class="answer-feedback" id="answer-feedback"></div>
+      <button class="btn-next" id="next-btn" onclick="nextQuestion()">下一題 →</button>
+    </div>
+
+    <!-- Result Screen -->
+    <div id="result-screen">
+      <div class="score-circle">
+        <span class="score-num" id="final-score">0</span>
+        <span class="score-denom">/ 10</span>
+      </div>
+      <div class="result-title" id="result-title"></div>
+      <div class="result-msg" id="result-msg"></div>
+      <div class="review-title">📋 答題回顧</div>
+      <div class="review-list" id="review-list"></div>
+      <p class="sending-msg" id="sending-msg">正在傳送結果給 Ning...</p>
+    </div>
+
+  </div>
+</div>
+
+<script>
+// ── EmailJS 設定 ─────────────────────────────────────────────
+// 請填入你自己的 EmailJS 資料
+const EMAILJS_PUBLIC_KEY   = 'Pz0gJ-sOROlKmQNst';
+const EMAILJS_SERVICE_ID   = 'service_gxxfmh3';
+const EMAILJS_TEMPLATE_ID  = 'template_czt2gwb';
+
+// ── 題目資料 ─────────────────────────────────────────────────
+const questions = [
+  {
+    type: 'choice',
+    q: '遇到極大挫折或心情崩潰時，我第一時間的真實反應是？',
+    options: ['約最好的朋友見面聊', '躲在家哭誰都不見面', '衝動消費暴飲暴食', '假裝沒事繼續完成手邊的事'],
+    answer: 3, // index (D)
+    answerText: 'D. 假裝沒事繼續完成手邊的事'
+  },
+  {
+    type: 'choice',
+    q: '如果必須放棄一種感官，我絕對不想放棄什麼？',
+    options: ['視覺', '聽覺', '觸覺', '味覺'],
+    answer: 0, // A
+    answerText: 'A. 視覺'
+  },
+  {
+    type: 'choice',
+    q: '我內心深處最常感到沒有安全感，或是自卑的事情是什麼？',
+    options: ['外表', '個性', '能力', '財富'],
+    answer: 1, // B
+    answerText: 'B. 個性'
+  },
+  {
+    type: 'choice',
+    q: '哪一項是我休閒時間最少做的事？',
+    options: ['看漫畫', '看小說', '看動漫', '追劇'],
+    answer: 1, // B
+    answerText: 'B. 看小說'
+  },
+  {
+    type: 'choice',
+    q: '以下選項我會最喜歡哪一種料理？',
+    options: ['韓式', '泰式', '港式', '美式'],
+    answer: 2, // C
+    answerText: 'C. 港式'
+  },
+  {
+    type: 'choice',
+    q: '關於工作選擇我更重視下列哪一項？',
+    options: ['通勤距離', '薪水多寡', '工作內容是否是我擅長/喜歡的', '同事好壞'],
+    answer: 1, // B
+    answerText: 'B. 薪水多寡'
+  },
+  {
+    type: 'choice',
+    q: '我沒有哪一間信用卡？',
+    options: ['中信', '富邦', '台新', '國泰'],
+    answer: 1, // B
+    answerText: 'B. 富邦'
+  },
+  {
+    type: 'fill',
+    q: '大學除了同科系以外的男友都是什麼系的？（填充題）',
+    answerText: '機械系',
+    check: (val) => {
+      const v = val.trim().replace(/\s/g, '');
+      return ['機械系','機械工程學系','機械工程系'].some(a => v.includes(a) || a.includes(v) && v.length >= 2);
+    }
+  },
+  {
+    type: 'fill',
+    q: '我學過的運動裡面，哪一項我最喜歡、覺得最有趣？（填充題）',
+    answerText: '拳擊',
+    check: (val) => {
+      const v = val.trim();
+      return v.includes('拳擊') || v.includes('拳击') || v.toLowerCase().includes('boxing');
+    }
+  },
+  {
+    type: 'fill',
+    q: '焦慮或緊張時有什麼習慣動作？（填充題）',
+    answerText: '撕嘴皮 / 摳指甲（答出其中一項即正確）',
+    check: (val) => {
+      const v = val.trim();
+      const keywords = ['撕嘴皮','剝嘴皮','撕嘴唇皮','剝嘴唇皮','撕嘴唇的皮','剝嘴唇的皮','摳指甲','撕指甲','剝指甲'];
+      return keywords.some(k => v.includes(k));
+    }
+  }
+];
+
+const labels = ['A', 'B', 'C', 'D'];
+let playerName = '';
+let current = 0;
+let userAnswers = []; // { text, correct }
+let score = 0;
+let answered = false;
+
+// Init EmailJS
+emailjs.init(EMAILJS_PUBLIC_KEY);
+
+// Enter key on name input
+document.getElementById('player-name').addEventListener('keydown', e => {
+  if (e.key === 'Enter') startQuiz();
+});
+
+function startQuiz() {
+  const n = document.getElementById('player-name').value.trim();
+  if (!n) { document.getElementById('player-name').focus(); return; }
+  playerName = n;
+  document.getElementById('name-screen').style.display = 'none';
+  document.getElementById('quiz-screen').style.display = 'block';
+  renderQuestion();
+}
+
+function renderQuestion() {
+  answered = false;
+  const q = questions[current];
+  const total = questions.length;
+  const pct = Math.round((current / total) * 100);
+
+  document.getElementById('prog-text').textContent = `第 ${current + 1} 題，共 ${total} 題`;
+  document.getElementById('prog-pct').textContent = pct + '%';
+  document.getElementById('progress-fill').style.width = pct + '%';
+
+  const fb = document.getElementById('answer-feedback');
+  fb.className = 'answer-feedback';
+  fb.textContent = '';
+
+  const nextBtn = document.getElementById('next-btn');
+  nextBtn.className = 'btn-next';
+  nextBtn.textContent = current === total - 1 ? '查看結果 🎉' : '下一題 →';
+
+  const area = document.getElementById('question-area');
+  area.className = 'fade-in';
+
+  if (q.type === 'choice') {
+    area.innerHTML = `
+      <div class="question-num">Q${current + 1}</div>
+      <div class="question-text">${q.q}</div>
+      <div class="options">
+        ${q.options.map((opt, i) => `
+          <button class="option-btn" id="opt-${i}" onclick="selectOption(${i})">
+            <span class="option-label">${labels[i]}</span>
+            ${opt}
+          </button>
+        `).join('')}
+      </div>
+    `;
+  } else {
+    area.innerHTML = `
+      <div class="question-num">Q${current + 1}</div>
+      <div class="question-text">${q.q}</div>
+      <div class="fill-input-wrap">
+        <input class="fill-input" id="fill-input" type="text" placeholder="輸入你的答案..." maxlength="30" autocomplete="off">
+      </div>
+    `;
+    const fi = document.getElementById('fill-input');
+    fi.addEventListener('keydown', e => {
+      if (e.key === 'Enter' && !answered) submitFill();
+    });
+    fi.addEventListener('input', () => {
+      if (!answered && fi.value.trim()) {
+        nextBtn.className = 'btn-next visible';
+      } else if (!answered) {
+        nextBtn.className = 'btn-next';
+      }
+    });
+    // Show next immediately for fill (confirm on next)
+    nextBtn.onclick = function() {
+      if (!answered) { submitFill(); } else { nextQuestion(); }
+    };
+  }
+}
+
+function selectOption(idx) {
+  if (answered) return;
+  answered = true;
+
+  const q = questions[current];
+  const isCorrect = idx === q.answer;
+
+  q.options.forEach((_, i) => {
+    const btn = document.getElementById('opt-' + i);
+    btn.disabled = true;
+    if (i === q.answer) btn.classList.add('correct');
+    else if (i === idx && !isCorrect) btn.classList.add('wrong');
+  });
+
+  const fb = document.getElementById('answer-feedback');
+  if (isCorrect) {
+    score++;
+    fb.textContent = '✓ 答對了！';
+    fb.className = 'answer-feedback show correct-fb';
+    userAnswers.push({ text: labels[idx] + '. ' + q.options[idx], correct: true });
+  } else {
+    fb.textContent = `✗ 正確答案是：${q.answerText}`;
+    fb.className = 'answer-feedback show wrong-fb';
+    userAnswers.push({ text: labels[idx] + '. ' + q.options[idx], correct: false });
+  }
+
+  document.getElementById('next-btn').className = 'btn-next visible';
+  document.getElementById('next-btn').onclick = nextQuestion;
+}
+
+function submitFill() {
+  if (answered) return;
+  const q = questions[current];
+  const fi = document.getElementById('fill-input');
+  const val = fi.value.trim();
+  if (!val) { fi.focus(); return; }
+
+  answered = true;
+  fi.disabled = true;
+
+  const isCorrect = q.check(val);
+  const fb = document.getElementById('answer-feedback');
+
+  if (isCorrect) {
+    score++;
+    fi.classList.add('correct');
+    fb.textContent = '✓ 答對了！';
+    fb.className = 'answer-feedback show correct-fb';
+    userAnswers.push({ text: val, correct: true });
+  } else {
+    fi.classList.add('wrong');
+    fb.textContent = `✗ 正確答案是：${q.answerText}`;
+    fb.className = 'answer-feedback show wrong-fb';
+    userAnswers.push({ text: val, correct: false });
+  }
+
+  const nextBtn = document.getElementById('next-btn');
+  nextBtn.className = 'btn-next visible';
+  nextBtn.textContent = current === questions.length - 1 ? '查看結果 🎉' : '下一題 →';
+  nextBtn.onclick = nextQuestion;
+}
+
+function nextQuestion() {
+  current++;
+  if (current < questions.length) {
+    renderQuestion();
+  } else {
+    showResult();
+  }
+}
+
+function showResult() {
+  document.getElementById('quiz-screen').style.display = 'none';
+  const rs = document.getElementById('result-screen');
+  rs.style.display = 'block';
+  rs.classList.add('fade-in');
+
+  document.getElementById('final-score').textContent = score;
+
+  const msgs = [
+    [0, 2, '完全不認識我嘛 😅', '沒關係，現在開始了解也不遲～'],
+    [3, 4, '略有耳聞 🤔', '認識了一點點，但還有很多待挖掘！'],
+    [5, 6, '算是認識 😊', '還不錯，但離真正了解我還有段距離～'],
+    [7, 8, '相當了解 🌊', '你對我的了解程度頗深！我們感情不錯呢～'],
+    [9, 9, '幾乎全對！✨', '你真的很了解我，這讓我有點感動...'],
+    [10, 10, '滿分！你是我肚子裡的蛔蟲嗎？🎉', '太厲害了，你比我還了解我自己！'],
+  ];
+
+  let title = '', msg = '';
+  for (const [min, max, t, m] of msgs) {
+    if (score >= min && score <= max) { title = t; msg = m; break; }
+  }
+  document.getElementById('result-title').textContent = title;
+  document.getElementById('result-msg').textContent = msg;
+
+  // Review list
+  const list = document.getElementById('review-list');
+  list.innerHTML = questions.map((q, i) => {
+    const ua = userAnswers[i];
+    const correct = ua.correct;
+    return `
+      <div class="review-item ${correct ? 'r-correct' : 'r-wrong'}">
+        <div class="review-q">Q${i+1}. ${q.q}</div>
+        <div class="review-your">你的答案：${ua.text}</div>
+        ${!correct ? `<div class="review-ans wrong-color">正確答案：${q.answerText}</div>` : ''}
+      </div>
+    `;
+  }).join('');
+
+  // Send email
+  sendResult();
+}
+
+function sendResult() {
+  const detailLines = questions.map((q, i) => {
+    const ua = userAnswers[i];
+    const mark = ua.correct ? '✓' : '✗';
+    return `${mark} Q${i+1}. ${q.q}\n   作答：${ua.text}\n   正解：${q.answerText}`;
+  }).join('\n\n');
+
+  const templateParams = {
+    player_name: playerName,
+    score: score,
+    total: questions.length,
+    details: detailLines,
+    time: new Date().toLocaleString('zh-TW', { timeZone: 'Asia/Taipei' })
+  };
+
+  emailjs.send(EMAILJS_SERVICE_ID, EMAILJS_TEMPLATE_ID, templateParams)
+    .then(() => {
+      document.getElementById('sending-msg').textContent = `✓ 結果已寄給 Ning！`;
+    })
+    .catch(() => {
+      document.getElementById('sending-msg').textContent = '⚠ 結果寄送失敗，請截圖分享給 Ning～';
+    });
+}
+</script>
+</body>
+</html>
